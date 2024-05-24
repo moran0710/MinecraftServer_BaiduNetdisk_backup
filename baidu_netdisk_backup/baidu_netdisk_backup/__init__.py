@@ -1,11 +1,15 @@
 from mcdreforged.api.types import PluginServerInterface, Info
+from mcdreforged.api.command import SimpleCommandBuilder
 from bypy import ByPy
-import shutil
-import yaml
 
 import os
+import shutil
 
-def on_load(server:PluginServerInterface, perv_moudle):
+from . import upload
+from .utils import get_config
+
+
+def on_load(server: PluginServerInterface, _):
     show_title(server)
 
     # 检车百度网盘配置
@@ -14,6 +18,10 @@ def on_load(server:PluginServerInterface, perv_moudle):
     has_config_check(server)
     # 载入配置
     config = get_config(server)
+    # TODO 载入mcdr命令
+    builder = SimpleCommandBuilder()
+    builder.command("!!baidu_backup", callback=upload.make_server_zip)
+    builder.register(server)
     # 完成载入
     server.logger.info("插件正确载入！")
 
@@ -53,11 +61,3 @@ def has_config_check(server):
         shutil.copyfile(local_config_file_path, config_file_path)
         server.logger.error(f"已经释放配置文件到{config_file_path}")
 
-def get_config(server):
-    server.logger.info("正在载入配置...")
-    config_dir_path = server.get_data_folder()
-    config_file_name = "baidu_netdisk_backup_config.yaml"
-    config_file_path = os.path.join(config_dir_path, config_file_name)
-    with open(config_file_path, "r", encoding="utf8") as f:
-        data = yaml.load(f, Loader=yaml.FullLoader)
-    return data
