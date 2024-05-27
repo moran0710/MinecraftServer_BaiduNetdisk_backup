@@ -1,3 +1,4 @@
+import shutil
 from zipfile import ZipFile
 
 from mcdreforged.command.command_source import CommandSource
@@ -41,41 +42,39 @@ def make_server_zip(source: CommandSource, context: CommandContext):
 
     # 获取所有支持的插件路径
     all_mcdr_plugin_path = mcdr_config['plugin_directories']
-    # 获取真正的插件路径列表
     mcdr_plugin_path = list()
     for plugin_path in all_mcdr_plugin_path:
-        mcdr_plugin_path.append(os.path.join(
-            running_path,
-            plugin_path
-        )
-        )
+        mcdr_plugin_path.append(os.path.join(running_path, plugin_path))
+    server.logger.info(mcdr_plugin_path)
+
+    # 获取真正的插件路径列表
 
     # 确定压缩后文件位置
     backup_zipfile = os.path.join(running_path, f"{server_name}_backup_{now_str}.zip")
 
-    # 关闭服务器
-
+    server.execute("save-off")
+    server.execute("save-all")
     # 开始压缩
-    for _ in zip_server(backup_zipfile, mcdr_config_file, mcdr_plugin_config, mcdr_plugin_path, server_path):
+    try:
+        zip_server(backup_zipfile, mcdr_config_file, mcdr_plugin_config, mcdr_plugin_path, server_path)
+    except PermissionError as e:
         pass
     server.logger.info("done")
+    server.execute("save-on")
     return backup_zipfile
 
-# TODO 文件坏的
+
 def zip_server(backup_zipfile, mcdr_config_file, mcdr_plugin_config, mcdr_plugin_path, server):
     with ZipFile(backup_zipfile, "w") as zipfile:
-        try:
-            yield zip_dir(server, zipfile, "minecraft_server")  # 服务器本体
-            yield zip_dir(mcdr_plugin_config, zipfile, "mcdr")  # mcdr插件配置
-            for path in mcdr_plugin_path:  # mcdr插件文件夹
-                yield zip_dir(path, zipfile, "mcdr")
-            yield zipfile.write(mcdr_config_file, os.path.join(server, "mcdr", "mcdr_config.yml"))  # mcdr配置文件
-        except PermissionError:
-            yield None
+        zipfile.write(mcdr_config_file, os.path.join("mcdr", "mcdr_config.yml"))  # mcdr配置文件
+        zip_dir(mcdr_plugin_config, zipfile, os.path.join("mcdr", "plugin_config"))  # mcdr插件配置
+        for plugin_path in mcdr_plugin_path:
+            zip_dir(plugin_path, zipfile, os.path.join("mcdr", "plugins"))
+        zip_dir(server, zipfile, "minecraft_server")  # 服务器本体
 
 
-def zip_dir(path: str, zipfile: ZipFile, temp:str):
+def zip_dir(path: str, zipfile: ZipFile, temp: str):
     for root, dirs, files in os.walk(path):
-        relative_root = temp if root == path else temp+root.replace(path, '') + os.sep  # 计算文件相对路径
+        relative_root = temp if root == path else temp + root.replace(path, '') + os.sep  # 计算文件相对路径
         for filename in files:
             zipfile.write(os.path.join(root, filename), os.path.join(relative_root, filename))  # 文件路径 压缩文件路径（相对路径）
