@@ -65,7 +65,7 @@ def make_server_zip(source: CommandSource, context: CommandContext):
 def zip_server(backup_zipfile, mcdr_config_file, mcdr_plugin_config, mcdr_plugin_path, server):
     with ZipFile(backup_zipfile, "w") as zipfile:
         try:
-            yield zip_dir(server, zipfile, "server")  # 服务器本体
+            yield zip_dir(server, zipfile, "minecraft_server")  # 服务器本体
             yield zip_dir(mcdr_plugin_config, zipfile, "mcdr")  # mcdr插件配置
             for path in mcdr_plugin_path:  # mcdr插件文件夹
                 yield zip_dir(path, zipfile, "mcdr")
@@ -76,6 +76,6 @@ def zip_server(backup_zipfile, mcdr_config_file, mcdr_plugin_config, mcdr_plugin
 
 def zip_dir(path: str, zipfile: ZipFile, temp:str):
     for root, dirs, files in os.walk(path):
-        relative_root = '' if root == path else root.replace(path, '') + os.sep  # 计算文件相对路径
+        relative_root = temp if root == path else temp+root.replace(path, '') + os.sep  # 计算文件相对路径
         for filename in files:
-            zipfile.write(os.path.join(root, filename), os.path.join(temp, relative_root, filename))  # 文件路径 压缩文件路径（相对路径）
+            zipfile.write(os.path.join(root, filename), os.path.join(relative_root, filename))  # 文件路径 压缩文件路径（相对路径）
