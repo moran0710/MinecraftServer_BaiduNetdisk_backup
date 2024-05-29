@@ -1,10 +1,11 @@
-from mcdreforged.api.types import PluginServerInterface, Info
-from mcdreforged.api.command import SimpleCommandBuilder
-from bypy import ByPy
-
 import os
 import shutil
 import traceback
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from bypy import ByPy
+from mcdreforged.api.command import SimpleCommandBuilder
+from mcdreforged.api.types import PluginServerInterface
 
 from . import upload
 from .utils import get_config
@@ -13,16 +14,30 @@ from .utils import get_config
 def on_load(server: PluginServerInterface, _):
     show_title(server)
 
-    # 检车百度网盘配置
+    # 检查百度网盘配置
     has_baidu_check(server)
     # 检查插件配置文件是否存在
     has_config_check(server)
     # 载入配置
     config = get_config(server)
+    server.logger.info(config)
     # 载入mcdr命令
     builder = SimpleCommandBuilder()
     builder.command("!!baidu_backup", callback=upload.upload_to_baidu)
     builder.register(server)
+    # 载入定时任务
+    if config['AutoSave']['enable']:
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(upload.upload_to_baidu, 'cron',
+                          day=config['AutoSave']['time']['d'],
+                          hour=config['AutoSave']['time']['h'],
+                          minute=config['AutoSave']['time']['m'],
+                          second=config['AutoSave']['time']['s'],
+                          args=[None, None]
+                          )
+        scheduler.start()
+        server.logger.info("定时任务启动成功")
+
     # 完成载入
     server.logger.info("插件正确载入！")
 
@@ -62,4 +77,3 @@ def has_config_check(server):
     running_path = os.getcwd()
     if not os.path.exists(os.path.join(running_path, "temp")):
         os.mkdir("temp")
-
