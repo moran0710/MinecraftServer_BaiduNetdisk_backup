@@ -69,10 +69,13 @@ def has_config_check(server):
     config_file_path = os.path.join(config_dir_path, config_file_name)
     if not os.path.exists(config_file_path):
         server.logger.error("配置文件不存在！")
+        with server.open_bundled_file("baidu_netdisk_backup_config.yaml") as file_handler:
+            config_file = file_handler.read().decode('utf8')
         local_dir_path = os.path.abspath(os.path.dirname(__file__))
         local_config_file_path = os.path.join(local_dir_path, config_file_name)
 
-        shutil.copyfile(local_config_file_path, config_file_path)
+        with open(config_file_path, 'w', encoding="utf-8") as file:
+            file.write(config_file)
         server.logger.error(f"已经释放配置文件到{config_file_path}")
     running_path = os.getcwd()
     if not os.path.exists(os.path.join(running_path, "temp")):
