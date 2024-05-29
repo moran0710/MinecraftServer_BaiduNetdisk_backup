@@ -4,6 +4,7 @@ from bypy import ByPy
 
 import os
 import shutil
+import traceback
 
 from . import upload
 from .utils import get_config
@@ -18,22 +19,19 @@ def on_load(server: PluginServerInterface, _):
     has_config_check(server)
     # 载入配置
     config = get_config(server)
-    # TODO 载入mcdr命令
+    # 载入mcdr命令
     builder = SimpleCommandBuilder()
-    builder.command("!!baidu_backup", callback=upload.make_server_zip)
+    builder.command("!!baidu_backup", callback=upload.upload_to_baidu)
     builder.register(server)
     # 完成载入
     server.logger.info("插件正确载入！")
 
 
 def show_title(server):
-    server.logger.info("#####################################")
-    server.logger.info("#                                   #")
-    server.logger.info("#    Baidu Netdisk Backup Plugin    #")
-    server.logger.info("#                                   #")
-    server.logger.info("#  --Powered By ByPy & Moran0710    #")
-    server.logger.info("#                                   #")
-    server.logger.info("#####################################")
+    server.logger.info("                                     ")
+    server.logger.info("          Baidu Netdisk Backup Plugin     ")
+    server.logger.info("              --Powered By ByPy & Moran0710     ")
+    server.logger.info("                                     ")
 
 
 def has_baidu_check(server):
@@ -44,6 +42,7 @@ def has_baidu_check(server):
         baidu_netdisk.info()
     except Exception as e:
         server.logger.error(f"出现异常！", e)
+        server.logger.error(traceback.format_exc())
         server.logger.error("本插件将不会正常加载")
         raise e
 
@@ -60,4 +59,7 @@ def has_config_check(server):
 
         shutil.copyfile(local_config_file_path, config_file_path)
         server.logger.error(f"已经释放配置文件到{config_file_path}")
+    running_path = os.getcwd()
+    if not os.path.exists(os.path.join(running_path, "temp")):
+        os.mkdir("temp")
 

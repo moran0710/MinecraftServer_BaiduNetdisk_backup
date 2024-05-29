@@ -1,5 +1,7 @@
 import yaml
 import os
+from mcdreforged.api.types import PluginServerInterface
+
 
 def get_config(server):
     server.logger.info("正在载入配置...")
@@ -10,3 +12,8 @@ def get_config(server):
         data = yaml.load(f, Loader=yaml.FullLoader)
     return data
 
+
+def get_server():
+    """获取服务器实例"""
+    server = PluginServerInterface.get_instance().as_plugin_server_interface()
+    return server
