@@ -1,0 +1,28 @@
+# BaiduNetdiskBackupPlugin
+# version 0.0.0
+
+# 服务器名称，这将决定备份文件名称
+# 备份文件将以 {%ServerName%}_backup_{%BackupTime%} 的格式上传到网盘
+# 其中%ServerName%为你的服务器名称，%BackupTime%为触发保存时的时间
+ServerName: 'YourServerName'
+
+# 槽位数量
+# 在网盘上保存多少个备份
+# 超出槽位个数的备份将被删除
+slot: 3
+
+# 自动保存配置
+AutoSave:
+  # 是否启用 默认为false（不启用）
+  enable: false
+  # 自动保存时间
+  # 使用24小时制
+  # 在h后面填小时, m后面填分钟，s后面填秒
+  # 你应当填入 h<=23 m<=59 s<=59, 否则会报错
+  # d参数后面为间隔天数（间隔多少天保存一次）
+  # 注意：引号是必须的
+  time:
+      d: "1"
+      h: "22"
+      m: "0"
+      s: "0"
