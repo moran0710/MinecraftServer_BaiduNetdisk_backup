@@ -7,5 +7,5 @@
         "zh_cn": "用于备份服务器数据并使用ByPy上传到百度网盘的MCDR插件。将会备份整个服务端（包括用户数据和插件数据），和MCDR插件及配置"
     },
     "author": "Moran0710",
-    "link": "https://github.com/moran0710/MinecraftServer_BaiduNetdisk_backup",
+    "link": "https://github.com/moran0710/MinecraftServer_BaiduNetdisk_backup"
 }
