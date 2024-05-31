@@ -1,5 +1,4 @@
 import os
-import shutil
 import traceback
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -10,8 +9,13 @@ from mcdreforged.api.types import PluginServerInterface
 from . import upload
 from .utils import get_config
 
+scheduler = BackgroundScheduler()
+
+job_used = False
+
 
 def on_load(server: PluginServerInterface, _):
+    global job_used
     show_title(server)
 
     # 检查百度网盘配置
@@ -27,19 +31,26 @@ def on_load(server: PluginServerInterface, _):
     builder.register(server)
     # 载入定时任务
     if config['AutoSave']['enable']:
-        scheduler = BackgroundScheduler()
         scheduler.add_job(upload.upload_to_baidu, 'cron',
                           day=config['AutoSave']['time']['d'],
                           hour=config['AutoSave']['time']['h'],
                           minute=config['AutoSave']['time']['m'],
                           second=config['AutoSave']['time']['s'],
-                          args=[None, None]
+                          args=[None, None],
+                          id="baidu_backup"
                           )
         scheduler.start()
+        job_used = True
         server.logger.info("定时任务启动成功")
 
     # 完成载入
     server.logger.info("插件正确载入！")
+
+
+def on_unload(server: PluginServerInterface):
+    if job_used:
+        scheduler.remove_job("baidu_backup")
+    server.logger.info("已经卸载本插件，感谢使用")
 
 
 def show_title(server):
@@ -71,8 +82,6 @@ def has_config_check(server):
         server.logger.error("配置文件不存在！")
         with server.open_bundled_file("baidu_netdisk_backup_config.yaml") as file_handler:
             config_file = file_handler.read().decode('utf8')
-        local_dir_path = os.path.abspath(os.path.dirname(__file__))
-        local_config_file_path = os.path.join(local_dir_path, config_file_name)
 
         with open(config_file_path, 'w', encoding="utf-8") as file:
             file.write(config_file)
